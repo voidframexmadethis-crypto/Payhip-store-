@@ -15,8 +15,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Setup directories
-const dataDir = path.resolve(__dirname, 'data');
-const uploadsDir = path.resolve(__dirname, 'uploads');
+const isVercel = !!process.env.VERCEL;
+const rootDataDir = path.resolve(__dirname, 'data');
+const dataDir = isVercel ? '/tmp/data' : rootDataDir;
+const uploadsDir = isVercel ? '/tmp/uploads' : path.resolve(__dirname, 'uploads');
 
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
@@ -27,7 +29,16 @@ if (!fs.existsSync(uploadsDir)) {
 
 const productsFilePath = path.join(dataDir, 'products.json');
 if (!fs.existsSync(productsFilePath)) {
-  fs.writeFileSync(productsFilePath, JSON.stringify([], null, 2));
+  const bundledProducts = path.join(rootDataDir, 'products.json');
+  if (fs.existsSync(bundledProducts)) {
+    try {
+      fs.copyFileSync(bundledProducts, productsFilePath);
+    } catch (e) {
+      fs.writeFileSync(productsFilePath, JSON.stringify([], null, 2));
+    }
+  } else {
+    fs.writeFileSync(productsFilePath, JSON.stringify([], null, 2));
+  }
 }
 
 const passkeysFilePath = path.join(dataDir, 'passkeys.json');
@@ -484,7 +495,12 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`CASHMERE KID$ Storefront running on http://localhost:${PORT}`);
-});
+// Export app for Vercel serverless function entrypoint
+export default app;
+
+// Start Server locally
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`CASHMERE KID$ Storefront running on http://localhost:${PORT}`);
+  });
+}
