@@ -8,6 +8,14 @@ export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [adminEnabled, setAdminEnabled] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/status')
+      .then(res => res.json())
+      .then(data => setAdminEnabled(!!data.enabled))
+      .catch(() => setAdminEnabled(false));
+  }, []);
 
   // Global Audio Player State
   const [activeTrack, setActiveTrack] = useState<Product | null>(null);
@@ -139,18 +147,22 @@ export default function App() {
       const target = e.target as HTMLElement;
       const anchor = target.closest('a');
       if (anchor && anchor.href && anchor.host === window.location.host) {
-        const url = new URL(anchor.href);
-        // If it points to an anchor on the same page, let standard scrolling handle it
-        if (url.pathname === window.location.pathname && url.hash) {
-          return;
-        }
-        // Avoid intercepting target="_blank"
-        if (anchor.target === '_blank') {
-          return;
-        }
-        e.preventDefault();
-        window.history.pushState(null, '', url.pathname + url.search + url.hash);
-        window.dispatchEvent(new Event('popstate'));
+        try {
+          const url = new URL(anchor.href, window.location.origin);
+          // If it points to an anchor on the same page, let standard scrolling handle it
+          if (url.pathname === window.location.pathname && url.hash) {
+            return;
+          }
+          // Avoid intercepting target="_blank"
+          if (anchor.target === '_blank') {
+            return;
+          }
+          e.preventDefault();
+          try {
+            window.history.pushState(null, '', url.pathname + url.search + url.hash);
+            window.dispatchEvent(new Event('popstate'));
+          } catch (_) {}
+        } catch (_) {}
       }
     };
     document.addEventListener('click', handleLinkClick);
@@ -274,7 +286,9 @@ export default function App() {
   const audioDurationText = `${formatTime(currentTime)} / ${formatTime(duration)}`;
 
   const navigateTo = (path: string) => {
-    window.history.pushState(null, '', path);
+    try {
+      window.history.pushState(null, '', path);
+    } catch (_) {}
     window.dispatchEvent(new Event('popstate'));
   };
 
