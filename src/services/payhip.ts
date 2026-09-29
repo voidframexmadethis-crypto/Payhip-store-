@@ -20,13 +20,22 @@ export interface PayhipProduct {
 
 export const PayhipService = {
   /**
+   * Validates whether a Payhip ID or link is valid and non-empty.
+   */
+  isValidPayhipId: (payhipId?: string): boolean => {
+    if (!payhipId) return false;
+    const clean = payhipId.trim();
+    return clean.length > 0 && clean !== '#';
+  },
+
+  /**
    * Formulates the official direct checkout link.
-   * If a specific license option has a payhipId, use that; otherwise, fallback to product level.
+   * NEVER returns '#' or invalid URL patterns.
    */
   getCheckoutUrl: (payhipId: string): string => {
-    if (!payhipId) return '#';
+    if (!payhipId) return '';
     const cleanId = payhipId.trim();
-    // Official Payhip direct checkout format
+    if (!cleanId || cleanId === '#') return '';
     return `https://payhip.com/b/${cleanId}`;
   },
 
@@ -36,6 +45,7 @@ export const PayhipService = {
   extractProductCode: (input: string): string => {
     if (!input) return '';
     const trimmed = input.trim();
+    if (trimmed === '#') return '';
     
     // Check for /b/XXXX or /co/XXXX patterns
     const bMatch = trimmed.match(/\/b\/([a-zA-Z0-9_-]+)/i);
@@ -61,11 +71,14 @@ export const PayhipService = {
   },
 
   /**
-   * Forces Payhip JS lightbox overlay to re-scan the DOM.
-   * This is critical when React dynamically renders product cards with 'payhip-buy-button' links.
+   * Forces Payhip JS lightbox overlay to re-scan the DOM ONLY when valid Payhip buttons exist.
+   * Prevents Payhip.init() from throwing DOMException on unconfigured buttons.
    */
   refreshOverlay: () => {
     if (typeof window !== 'undefined') {
+      const validButton = document.querySelector('.payhip-buy-button[data-product]:not([data-product=""]):not([data-product="#"])');
+      if (!validButton) return;
+
       const win = window as any;
       if (win.Payhip && typeof win.Payhip.init === 'function') {
         try {

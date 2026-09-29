@@ -183,7 +183,8 @@ export default function BeatDetailPage({
               
               <div className="space-y-3.5">
                 {product.variants!.map((variant, idx) => {
-                  const variantUrl = PayhipService.getCheckoutUrl(variant.payhipId);
+                  const isValidVariant = PayhipService.isValidPayhipId(variant.payhipId);
+                  const variantUrl = isValidVariant ? PayhipService.getCheckoutUrl(variant.payhipId) : '';
                   return (
                     <div 
                       key={idx}
@@ -199,21 +200,21 @@ export default function BeatDetailPage({
                       
                       <div className="flex items-center gap-4 flex-shrink-0 justify-between md:justify-end">
                         <span className="text-xl font-black font-mono text-white">${variant.price}</span>
-                        <a 
-                          className="px-6 py-3.5 bg-white text-black hover:bg-zinc-200 text-xs font-extrabold tracking-widest uppercase transition-all font-mono inline-flex items-center gap-1.5 rounded-none payhip-buy-button cursor-pointer"
-                          href={variantUrl}
-                          data-product={variant.payhipId}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => {
-                            if (variantUrl === '#') {
-                              e.preventDefault();
-                              alert("Payhip variant product code missing.");
-                            }
-                          }}
-                        >
-                          BUY LICENSE ↗
-                        </a>
+                        {isValidVariant ? (
+                          <a 
+                            className="px-6 py-3.5 bg-white text-black hover:bg-zinc-200 text-xs font-extrabold tracking-widest uppercase transition-all font-mono inline-flex items-center gap-1.5 rounded-none payhip-buy-button cursor-pointer"
+                            href={variantUrl}
+                            data-product={variant.payhipId.trim()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            BUY LICENSE ↗
+                          </a>
+                        ) : (
+                          <span className="px-5 py-3 bg-zinc-900 border border-white/10 text-zinc-500 text-xs font-bold uppercase tracking-wider font-mono">
+                            BUY LICENSE (PENDING)
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
@@ -238,21 +239,21 @@ export default function BeatDetailPage({
                   {shareText}
                 </button>
 
-                <a 
-                  className="px-8 py-4 bg-white text-black hover:bg-zinc-200 text-xs font-extrabold tracking-widest uppercase transition-colors inline-flex items-center justify-center gap-2 rounded-none payhip-buy-button" 
-                  href={mainCheckoutUrl}
-                  data-product={product.payhipId}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => {
-                    if (mainCheckoutUrl === '#') {
-                      e.preventDefault();
-                      alert("Payhip link not configured yet.");
-                    }
-                  }}
-                >
-                  PROCEED TO PAYHIP ↗
-                </a>
+                {PayhipService.isValidPayhipId(product.payhipId) ? (
+                  <a 
+                    className="px-8 py-4 bg-white text-black hover:bg-zinc-200 text-xs font-extrabold tracking-widest uppercase transition-colors inline-flex items-center justify-center gap-2 rounded-none payhip-buy-button" 
+                    href={PayhipService.getCheckoutUrl(product.payhipId || '')}
+                    data-product={(product.payhipId || '').trim()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    PROCEED TO PAYHIP ↗
+                  </a>
+                ) : (
+                  <span className="px-8 py-4 bg-zinc-900 border border-white/10 text-zinc-500 text-xs font-bold uppercase tracking-widest font-mono cursor-not-allowed">
+                    CHECKOUT PENDING
+                  </span>
+                )}
               </div>
             </div>
           )}

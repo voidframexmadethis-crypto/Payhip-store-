@@ -189,7 +189,8 @@ export default function ProductCard({
               </span>
               <div className="space-y-2.5">
                 {product.variants!.map((variant, idx) => {
-                  const variantUrl = PayhipService.getCheckoutUrl(variant.payhipId);
+                  const isValidVariant = PayhipService.isValidPayhipId(variant.payhipId);
+                  const variantUrl = isValidVariant ? PayhipService.getCheckoutUrl(variant.payhipId) : '';
                   return (
                     <div 
                       key={idx}
@@ -202,21 +203,21 @@ export default function ProductCard({
                             <span className="text-[10px] text-zinc-500 block leading-relaxed mt-0.5 whitespace-pre-wrap">{variant.description}</span>
                           )}
                         </div>
-                        <a 
-                          className="buy-button payhip-buy-button text-[11px] px-3.5 py-2 flex items-center gap-1 cursor-pointer bg-white text-black font-bold uppercase transition-all whitespace-nowrap" 
-                          href={variantUrl}
-                          data-product={variant.payhipId}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => {
-                            if (variantUrl === '#') {
-                              e.preventDefault();
-                              alert("Payhip variant key is missing.");
-                            }
-                          }}
-                        >
-                          BUY ${variant.price} ↗
-                        </a>
+                        {isValidVariant ? (
+                          <a 
+                            className="buy-button payhip-buy-button text-[11px] px-3.5 py-2 flex items-center gap-1 cursor-pointer bg-white text-black font-bold uppercase transition-all whitespace-nowrap" 
+                            href={variantUrl}
+                            data-product={variant.payhipId.trim()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            BUY ${variant.price} ↗
+                          </a>
+                        ) : (
+                          <span className="text-[10px] font-bold uppercase px-3 py-2 bg-zinc-900 border border-white/10 text-zinc-500 font-mono tracking-wider">
+                            BUY ${variant.price} (PENDING)
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
@@ -229,22 +230,22 @@ export default function ProductCard({
               <span className="price-display uppercase font-mono tracking-wider">
                 SINGLE LICENSE
               </span>
-              <a 
-                className="buy-button payhip-buy-button" 
-                href={mainCheckoutUrl}
-                data-product={product.payhipId}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Purchase beat"
-                onClick={(e) => {
-                  if (mainCheckoutUrl === '#') {
-                    e.preventDefault();
-                    alert("Payhip link not configured yet.");
-                  }
-                }}
-              >
-                BUY ${product.price || '0.00'} <span>↗</span>
-              </a>
+              {PayhipService.isValidPayhipId(product.payhipId) ? (
+                <a 
+                  className="buy-button payhip-buy-button" 
+                  href={PayhipService.getCheckoutUrl(product.payhipId || '')}
+                  data-product={(product.payhipId || '').trim()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Purchase beat"
+                >
+                  BUY ${product.price || '0.00'} <span>↗</span>
+                </a>
+              ) : (
+                <span className="buy-button opacity-50 text-zinc-500 bg-zinc-900 cursor-not-allowed border border-white/10 text-xs font-mono font-bold uppercase px-4 py-2">
+                  BUY ${product.price || '0.00'} (PENDING)
+                </span>
+              )}
             </div>
           )}
         </div>

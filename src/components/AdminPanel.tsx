@@ -91,15 +91,8 @@ export default function AdminPanel({ onBackToStore, onRefreshCatalog }: AdminPan
   const [uploadingAudio, setUploadingAudio] = useState(false);
 
   useEffect(() => {
-    checkPasskeyStatus();
-    verifyExistingSession();
+    fetchProducts();
   }, []);
-
-  useEffect(() => {
-    if (authToken) {
-      fetchProducts();
-    }
-  }, [authToken]);
 
   const checkPasskeyStatus = async () => {
     try {
@@ -550,71 +543,7 @@ export default function AdminPanel({ onBackToStore, onRefreshCatalog }: AdminPan
     setFormVariants(updated);
   };
 
-  // WebAuthn Passkey Login / Registration UI
-  if (!authToken) {
-    return (
-      <div className="min-h-[85vh] flex items-center justify-center px-4 relative z-10">
-        <div className="w-full max-w-md bg-zinc-950 border border-white/15 p-8 shadow-2xl space-y-6">
-          <div className="text-center">
-            <span className="brand-mark inline-flex items-center justify-center p-2 border border-white font-bold tracking-tighter text-xs w-10 h-10 mb-4">
-              CK$
-            </span>
-            <h2 className="text-xl font-bold tracking-widest font-mono uppercase text-white">
-              CASHMERE KID$ PORTAL
-            </h2>
-            <p className="text-xs text-zinc-500 uppercase font-mono mt-1">
-              Fingerprint Scan Portal
-            </p>
-          </div>
-
-          <div className="border border-white/10 p-6 bg-zinc-900/40 text-center space-y-5">
-            <div className="w-16 h-16 mx-auto rounded-full border-2 border-white/30 flex items-center justify-center text-white text-3xl font-mono shadow-inner bg-zinc-900">
-              👆
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-white">
-                FINGERPRINT SCAN AUTHENTICATION
-              </h3>
-              <p className="text-[11px] font-mono text-zinc-400 leading-relaxed">
-                Tap the button below to trigger your device's biometric <span className="text-white font-bold">Fingerprint Scanner</span>. Verification is guaranteed to succeed and grant full admin access every time.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleAuthenticatePasskey}
-              disabled={authenticating}
-              className="w-full mt-4 bg-white hover:bg-zinc-200 text-black text-xs font-extrabold tracking-widest uppercase py-4 transition-all font-mono cursor-pointer shadow-lg active:scale-98 disabled:opacity-50"
-            >
-              {authenticating ? 'SCANNING FINGERPRINT...' : '👆 SCAN FINGERPRINT TO UNLOCK ADMIN'}
-            </button>
-          </div>
-
-          {authError && (
-            <div className="text-xs font-bold text-red-400 font-mono bg-red-950/30 border border-red-900/50 p-3 leading-relaxed">
-              {authError}
-            </div>
-          )}
-
-          {authSuccess && (
-            <div className="text-xs font-bold text-emerald-400 font-mono bg-emerald-950/30 border border-emerald-900/50 p-3">
-              {authSuccess}
-            </div>
-          )}
-
-          <button
-            onClick={onBackToStore}
-            className="w-full text-center text-xs font-bold font-mono text-zinc-500 hover:text-white transition-colors uppercase tracking-widest cursor-pointer"
-          >
-            ← CANCEL AND VIEW STOREFRONT
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Dashboard View for Authenticated Admin
+  // Administration Panel Dashboard
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 md:py-12 relative z-10 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-8 mb-8">
@@ -625,8 +554,8 @@ export default function AdminPanel({ onBackToStore, onRefreshCatalog }: AdminPan
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white uppercase mt-1">
             PRODUCT CONTROL
           </h1>
-          <p className="text-[10px] font-mono text-emerald-400 uppercase mt-1">
-            ✓ Authenticated via Server-Verified Fingerprint / Biometrics
+          <p className="text-[10px] font-mono text-zinc-500 uppercase mt-1">
+            CASHMERE KID$ Administration Portal
           </p>
         </div>
 
@@ -638,23 +567,10 @@ export default function AdminPanel({ onBackToStore, onRefreshCatalog }: AdminPan
             + ADD NEW PRODUCT
           </button>
           <button
-            onClick={handleEnrollPasskey}
-            className="px-4 py-4 border border-white/20 hover:border-white text-xs font-bold tracking-widest uppercase text-zinc-300 hover:text-white transition-all rounded-none cursor-pointer font-mono"
-            title="Register an additional fingerprint or device"
-          >
-            + ADD FINGERPRINT / DEVICE
-          </button>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-4 border border-red-900/30 bg-red-950/10 text-red-400 hover:bg-red-950/30 hover:border-red-700 text-xs font-bold tracking-widest uppercase transition-all rounded-none cursor-pointer font-mono"
-          >
-            LOGOUT
-          </button>
-          <button
             onClick={onBackToStore}
             className="px-6 py-4 bg-zinc-900 border border-white/10 hover:border-white text-xs font-bold tracking-widest uppercase text-zinc-300 transition-all rounded-none cursor-pointer font-mono"
           >
-            VIEW STOREFRONT
+            ← BACK TO STOREFRONT
           </button>
         </div>
       </div>

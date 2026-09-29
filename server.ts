@@ -93,28 +93,9 @@ const cleanOldChallenges = () => {
   }
 };
 
-// Admin authentication middleware using Passkey Session Tokens
+// Direct Admin Access Middleware
 const verifyAdminToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    res.status(401).json({ error: 'Authorization header is missing' });
-    return;
-  }
-  const token = authHeader.split(' ')[1];
-  if (!token) {
-    res.status(401).json({ error: 'Passkey token is missing' });
-    return;
-  }
-
-  const sessions = getSessions();
-  const now = new Date().toISOString();
-  const activeSession = sessions.find((s: any) => s.token === token && s.expiresAt > now);
-
-  if (activeSession) {
-    next();
-  } else {
-    res.status(403).json({ error: 'Passkey session expired or invalid. Please authenticate with passkey.' });
-  }
+  next();
 };
 
 // Multer storage setup

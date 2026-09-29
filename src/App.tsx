@@ -319,7 +319,6 @@ export default function App() {
           <a href="/#beats" onClick={() => navigateTo('/#beats')}>BEATS</a>
           <a href="/#about" onClick={() => navigateTo('/#about')}>ABOUT</a>
           <a href="/#contact" onClick={() => navigateTo('/#contact')}>CONTACT</a>
-          <a href="/admin" onClick={(e) => { e.preventDefault(); navigateTo('/admin'); }} className="opacity-40 hover:opacity-100 transition-opacity">PORTAL</a>
         </nav>
 
         {/* Mobile touch trigger button */}
@@ -340,7 +339,6 @@ export default function App() {
           <a href="/#beats" onClick={() => { setMobileMenuOpen(false); navigateTo('/#beats'); }}>BEATS</a>
           <a href="/#about" onClick={() => { setMobileMenuOpen(false); navigateTo('/#about'); }}>ABOUT</a>
           <a href="/#contact" onClick={() => { setMobileMenuOpen(false); navigateTo('/#contact'); }}>CONTACT</a>
-          <a href="/admin" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); navigateTo('/admin'); }}>ADMIN PANEL</a>
         </div>
       )}
 
