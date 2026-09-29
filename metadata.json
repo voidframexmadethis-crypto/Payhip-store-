@@ -1,0 +1,8 @@
+{
+  "name": "CASHMERE KID$",
+  "description": "Exclusive, independent producer storefront for CASHMERE KID$ original beats. Discover, listen, and purchase licensing directly via secure Payhip integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

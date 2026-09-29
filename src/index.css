@@ -1,0 +1,573 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #050505;
+  --surface: #0a0a0a;
+  --surface-2: #0f0f0f;
+  --line: rgba(255,255,255,.18);
+  --line-strong: rgba(255,255,255,.72);
+  --text: #f6f6f3;
+  --muted: #9a9a96;
+  --shadow: 0 24px 70px rgba(0,0,0,.48);
+  --ease: cubic-bezier(.22,1,.36,1);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 80% 8%, rgba(255,255,255,.055), transparent 28rem),
+    radial-gradient(circle at 15% 42%, rgba(255,255,255,.025), transparent 34rem),
+    var(--bg);
+  font-family: Inter, system-ui, sans-serif;
+  line-height: 1.45;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
+  z-index: 20;
+}
+
+a { color: inherit; text-decoration: none; }
+button, a { -webkit-tap-highlight-color: transparent; }
+
+.site-watermark {
+  position: fixed;
+  z-index: 0;
+  left: 50%;
+  top: 53%;
+  transform: translate(-50%,-50%) rotate(-8deg);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(5rem, 16vw, 16rem);
+  font-weight: 700;
+  letter-spacing: -.08em;
+  line-height: .8;
+  white-space: nowrap;
+  color: rgba(255,255,255,.018);
+  pointer-events: none;
+  user-select: none;
+}
+
+.site-header, main, .site-footer, .mobile-nav { position: relative; z-index: 2; }
+
+.site-header {
+  min-height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 0 clamp(1.1rem, 4vw, 4rem);
+  border-bottom: 1px solid var(--line);
+  background: rgba(5,5,5,.82);
+  backdrop-filter: blur(18px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand { display: inline-flex; align-items: center; gap: .75rem; }
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px; height: 36px;
+  border: 1px solid var(--line-strong);
+  font: 700 .72rem/1 "Space Grotesk";
+  letter-spacing: -.04em;
+}
+.brand-name {
+  font: 700 .9rem/1 "Space Grotesk";
+  letter-spacing: .12em;
+}
+
+.nav { display: flex; gap: clamp(1.2rem, 3vw, 3rem); }
+.nav a, .mobile-nav a {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  color: #d8d8d4;
+  transition: color .2s ease;
+}
+.nav a:hover, .mobile-nav a:hover { color: #fff; }
+
+.menu-toggle {
+  display: none;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: white;
+  width: 46px; height: 46px;
+  padding: 11px;
+}
+.menu-toggle span:not(.sr-only) {
+  display: block; height: 1px; background: #fff; margin: 5px 0;
+}
+
+.mobile-nav {
+  display: none;
+  position: sticky;
+  top: 82px;
+  padding: 1rem 1.1rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+  background: #070707;
+}
+.mobile-nav a { display: block; padding: .8rem 0; border-bottom: 1px solid rgba(255,255,255,.09); }
+
+.hero {
+  min-height: min(760px, calc(100svh - 82px));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6rem clamp(1.1rem, 8vw, 8rem);
+  border-bottom: 1px solid var(--line);
+}
+.hero-kicker, .section-label {
+  font-size: .66rem;
+  font-weight: 700;
+  letter-spacing: .2em;
+  color: #aaa;
+}
+.hero-kicker { display: flex; align-items: center; gap: .7rem; }
+.hero-kicker span { width: 28px; height: 1px; background: #fff; }
+
+.hero h1 {
+  max-width: 980px;
+  margin: 1.1rem 0 1.2rem;
+  font: 700 clamp(4.2rem, 13vw, 11rem)/.78 "Space Grotesk", sans-serif;
+  letter-spacing: -.085em;
+}
+.hero h1 em, .contact-section h2 em {
+  font-style: normal;
+  -webkit-text-stroke: 1px rgba(255,255,255,.78);
+  color: transparent;
+}
+.hero p {
+  max-width: 560px;
+  color: #b7b7b3;
+  font-size: clamp(.95rem, 1.5vw, 1.15rem);
+}
+.outline-button, .buy-button, .share-button, .play-button {
+  transition: transform .22s var(--ease), background .22s ease, color .22s ease, border-color .22s ease;
+}
+.outline-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  width: min(220px, 100%);
+  margin-top: 1.4rem;
+  padding: .9rem 1rem;
+  border: 1px solid var(--line-strong);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .15em;
+}
+.outline-button:hover, .buy-button:hover { background: #fff; color: #050505; transform: translateY(-2px); }
+
+.store-section {
+  padding: clamp(4rem, 8vw, 8rem) clamp(1.1rem, 4vw, 4rem);
+}
+.section-heading {
+  display: flex; align-items: end; gap: 2rem;
+  margin-bottom: 2rem;
+}
+.section-heading h2, .about-section h2, .contact-section h2 {
+  margin: .45rem 0 0;
+  font: 700 clamp(2.4rem, 5vw, 4.8rem)/.9 "Space Grotesk";
+  letter-spacing: -.06em;
+}
+.catalog-line { flex: 1; height: 1px; margin-bottom: .3rem; background: var(--line); }
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 2.3vw, 2rem);
+}
+
+.empty-catalog {
+  grid-column: 1 / -1;
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  border: 1px dashed rgba(255,255,255,.22);
+  background: rgba(255,255,255,.012);
+  color: #777;
+  text-align: center;
+  font-size: .76rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.product-card {
+  position: relative;
+  min-width: 0;
+  filter: drop-shadow(0 18px 35px rgba(0,0,0,.3));
+}
+.card-frame {
+  position: relative;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,.82), rgba(255,255,255,.12) 32%, rgba(255,255,255,.42) 68%, rgba(255,255,255,.08));
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+}
+.card-frame::before, .card-frame::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+}
+.card-frame::before {
+  inset: 7px;
+  border: 1px solid rgba(255,255,255,.1);
+  clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 11px 100%, 0 calc(100% - 11px));
+}
+.card-frame::after {
+  width: 34px; height: 1px;
+  right: 10px; top: 10px;
+  background: rgba(255,255,255,.75);
+  transform: rotate(45deg);
+  transform-origin: right center;
+}
+.artwork-wrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #0b0b0b;
+}
+.artwork {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  background: #0c0c0c;
+}
+.artwork-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,.72));
+  pointer-events: none;
+}
+.track-badge {
+  position: absolute;
+  left: 1rem; top: 1rem;
+  padding: .42rem .5rem;
+  border: 1px solid rgba(255,255,255,.55);
+  background: rgba(0,0,0,.55);
+  font: 700 .62rem/1 "Space Grotesk";
+  letter-spacing: .06em;
+}
+.player-shell, .card-info { background: var(--surface); }
+.player-shell {
+  padding: .8rem .9rem .75rem;
+  border-top: 1px solid rgba(255,255,255,.16);
+  border-bottom: 1px solid rgba(255,255,255,.09);
+}
+.player-top { display: flex; align-items: center; gap: .7rem; }
+.play-button {
+  flex: 0 0 auto;
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+.play-button:hover { background: #fff; color: #000; }
+.play-icon { font-size: .65rem; margin-left: 2px; }
+.track-meta { min-width: 0; flex: 1; }
+.track-title, .track-producer {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.track-title { font-weight: 700; font-size: .78rem; }
+.track-producer { margin-top: .15rem; color: #8e8e8a; font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; }
+.track-time { color: #777; font-size: .62rem; font-variant-numeric: tabular-nums; }
+.waveform {
+  height: 32px;
+  margin-top: .55rem;
+  opacity: .7;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 4px, rgba(255,255,255,.72) 4px 5px, transparent 5px 8px);
+  mask-image: linear-gradient(90deg, #000, rgba(0,0,0,.4), #000);
+}
+.audio { display: none; }
+
+.card-info { padding: 1rem .9rem 1rem; }
+.title-row { display: flex; align-items: center; gap: .7rem; justify-content: space-between; }
+.product-title {
+  min-width: 0;
+  margin: 0;
+  font: 700 1rem/1.1 "Space Grotesk";
+  letter-spacing: -.02em;
+}
+.share-button {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255,255,255,.34);
+  background: transparent;
+  color: #d4d4d0;
+  padding: .55rem .62rem;
+  font-size: .57rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  cursor: pointer;
+}
+.share-button:hover { border-color: #fff; color: #fff; }
+
+.license-area { margin-top: 1rem; }
+.license-heading {
+  display: flex; justify-content: space-between; gap: 1rem;
+  padding-bottom: .45rem;
+  border-bottom: 1px solid rgba(255,255,255,.13);
+  color: #8d8d89;
+  font-size: .55rem;
+  font-weight: 700;
+  letter-spacing: .13em;
+}
+.license-list { display: grid; gap: .45rem; margin-top: .55rem; }
+.license-option {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .7rem; min-height: 42px;
+  padding: .45rem .55rem;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.015);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.license-option:hover {
+  border-color: rgba(255,255,255,.4);
+  background: rgba(255,255,255,.04);
+}
+.license-option.selected {
+  border-color: #fff;
+  background: rgba(255,255,255,.08);
+}
+.license-name { font-size: .63rem; font-weight: 700; letter-spacing: .12em; }
+.license-price { color: #9a9a96; font-size: .63rem; }
+.buy-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; margin-top: 1rem;
+}
+.price-display { color: #7d7d79; font-size: .54rem; font-weight: 700; letter-spacing: .09em; }
+.buy-button {
+  display: inline-flex; align-items: center; gap: .8rem;
+  padding: .68rem .78rem;
+  border: 1px solid #fff;
+  background: transparent;
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  cursor: pointer;
+}
+
+.about-section {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 720px);
+  gap: clamp(1.5rem, 5vw, 5rem);
+  padding: clamp(4rem, 8vw, 8rem) clamp(1.1rem, 12vw, 12rem);
+  border-top: 1px solid var(--line);
+}
+.about-index { color: #6f6f6b; font: 600 1rem "Space Grotesk"; }
+.about-section p, .contact-section p { max-width: 650px; color: #999995; }
+
+.contact-section {
+  padding: clamp(4rem, 9vw, 9rem) clamp(1.1rem, 4vw, 4rem);
+  border-top: 1px solid var(--line);
+}
+.contact-section p { margin-top: 1.5rem; }
+
+.site-footer {
+  display: flex; justify-content: space-between; gap: 1rem;
+  padding: 2rem clamp(1.1rem, 4vw, 4rem);
+  border-top: 1px solid var(--line);
+}
+.footer-brand { font: 700 .72rem "Space Grotesk"; letter-spacing: .14em; }
+.footer-meta { color: #666; font-size: .62rem; letter-spacing: .1em; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+@media (max-width: 980px) {
+  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 680px) {
+  .site-header { min-height: 72px; }
+  .brand-name { font-size: .76rem; }
+  .brand-mark { width: 32px; height: 32px; }
+  .nav { display: none; }
+  .menu-toggle { display: block; }
+  .mobile-nav:not([hidden]) { display: block; }
+  .hero { min-height: 650px; padding-top: 5rem; }
+  .hero h1 { font-size: clamp(4rem, 20vw, 7rem); }
+  .store-section { padding-top: 4rem; }
+  .product-grid { grid-template-columns: 1fr; }
+  .about-section { grid-template-columns: 1fr; gap: 1rem; }
+  .about-index { order: 0; }
+  .site-footer { flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; }
+}
+
+/* Custom progress bar styles for a premium audio player */
+.audio-progress-container {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-top: 8px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.audio-progress-bar {
+  height: 100%;
+  background: #fff;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+/* Premium Animated Fire CSS */
+.fire-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(5, 5, 5, 0.85);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  padding: 4px 8px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #f87171;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.25);
+  backdrop-filter: blur(4px);
+}
+
+.fire-animation {
+  position: relative;
+  width: 14px;
+  height: 16px;
+}
+
+.fire-flame {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 100%, #facc15 0%, #f97316 40%, #ef4444 80%, transparent 100%);
+  border-radius: 50% 50% 20% 20% / 60% 60% 40% 40%;
+  filter: blur(0.5px);
+  animation: flame-flicker 1s infinite ease-in-out alternate, flame-sway 2s infinite ease-in-out;
+  transform-origin: center bottom;
+}
+
+.fire-flame-inner {
+  position: absolute;
+  bottom: 1px;
+  left: 15%;
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(circle at 50% 100%, #ffffff 0%, #facc15 50%, transparent 100%);
+  border-radius: 50% 50% 20% 20% / 60% 60% 40% 40%;
+  filter: blur(0.2px);
+  animation: flame-flicker 0.6s infinite ease-in-out alternate-reverse;
+  transform-origin: center bottom;
+}
+
+.fire-particle {
+  position: absolute;
+  bottom: 4px;
+  left: 40%;
+  width: 3px;
+  height: 3px;
+  background-color: #facc15;
+  border-radius: 50%;
+  animation: flame-particle-rise 1.2s infinite linear;
+}
+
+.fire-particle-2 {
+  position: absolute;
+  bottom: 3px;
+  left: 60%;
+  width: 2px;
+  height: 2px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  animation: flame-particle-rise 0.8s infinite linear;
+  animation-delay: 0.4s;
+}
+
+@keyframes flame-flicker {
+  0% {
+    transform: scale(0.9, 0.95);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.05, 1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.95, 1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes flame-sway {
+  0%, 100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes flame-particle-rise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-12px) scale(0.4);
+    opacity: 0;
+  }
+}
+
+/* Audio Reactive Beat Artwork classes */
+.reactive-artwork {
+  will-change: transform, box-shadow, border-color;
+  transform: scale(var(--audio-pulse, 1));
+  box-shadow: 0 0 calc(var(--audio-glow, 0) * 45px) rgba(168, 85, 247, calc(var(--audio-glow, 0) * 0.6));
+  transition: transform 0.08s cubic-bezier(0.1, 0.8, 0.2, 1), box-shadow 0.08s ease-out;
+}
+
+.reactive-accent {
+  background: linear-gradient(90deg, #a855f7, #06b6d4) !important;
+  box-shadow: 0 0 calc(var(--audio-glow, 0) * 20px) #a855f7;
+  opacity: calc(0.35 + var(--audio-glow, 0) * 0.65) !important;
+  transition: opacity 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reactive-artwork {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  .reactive-accent {
+    opacity: 0.35 !important;
+    box-shadow: none !important;
+  }
+}
