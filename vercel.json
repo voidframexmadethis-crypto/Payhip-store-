@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/beat/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/((?!api/|uploads/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
