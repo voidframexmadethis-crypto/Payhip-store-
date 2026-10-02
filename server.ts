@@ -51,6 +51,11 @@ if (!fs.existsSync(sessionsFilePath)) {
   fs.writeFileSync(sessionsFilePath, JSON.stringify([], null, 2));
 }
 
+const messagesFilePath = path.join(dataDir, 'messages.json');
+if (!fs.existsSync(messagesFilePath)) {
+  fs.writeFileSync(messagesFilePath, JSON.stringify([], null, 2));
+}
+
 // Middleware
 app.use(express.json());
 
@@ -106,6 +111,23 @@ const cleanOldChallenges = () => {
 
 // Direct Admin Access Middleware
 const verifyAdminToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader ? authHeader.split(' ')[1] : null;
+
+  if (!token) {
+    res.status(401).json({ error: 'Unauthorized access. Token is missing.' });
+    return;
+  }
+
+  const sessions = getSessions();
+  const now = new Date().toISOString();
+  const isValid = sessions.some((s: any) => s.token === token && s.expiresAt > now);
+
+  if (!isValid) {
+    res.status(401).json({ error: 'Unauthorized access. Token is invalid or expired.' });
+    return;
+  }
+
   next();
 };
 
@@ -354,6 +376,25 @@ app.get('/api/admin/status', (req, res) => {
   res.json({ enabled: true, passkeyAuth: true });
 });
 
+// Secure Password Login Route
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body;
+  const correctPassword = process.env.ADMIN_PASSWORD || '19 9927B';
+
+  if (password === correctPassword) {
+    const sessionToken = 'ck_passkey_login_' + crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    const sessions = getSessions();
+    sessions.push({ token: sessionToken, createdAt: new Date().toISOString(), expiresAt });
+    saveSessions(sessions);
+
+    res.json({ success: true, token: sessionToken });
+  } else {
+    res.status(401).json({ error: 'Incorrect admin password' });
+  }
+});
+
 // Get all products
 app.get('/api/products', (req, res) => {
   try {
@@ -451,7 +492,7 @@ app.delete('/api/products/:id', verifyAdminToken, (req, res) => {
 });
 
 // Upload media file (Admin only)
-app.post('/api/upload', verifyAdminToken, upload.single('file'), (req, res) => {
+app.post('/api/upload', verifyAdminToken, upload.single('file') as any, (req, res) => {
   try {
     if (!req.file) {
       res.status(400).json({ error: 'No file uploaded' });
@@ -463,6 +504,89 @@ app.post('/api/upload', verifyAdminToken, upload.single('file'), (req, res) => {
   } catch (error) {
     console.error('Failed to upload file:', error);
     res.status(500).json({ error: 'Internal server error during upload' });
+  }
+});
+
+// Upload media file (Public, for artists to send reference vocals/audio demos)
+app.post('/api/public/upload', upload.single('file') as any, (req, res) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.json({ fileUrl });
+  } catch (error) {
+    console.error('Failed to upload public file:', error);
+    res.status(500).json({ error: 'Internal server error during public upload' });
+  }
+});
+
+// Submit Contact Message (Public)
+app.post('/api/contact', (req, res) => {
+  try {
+    const { name, email, subject, message, audioUrl } = req.body;
+    if (!name || !email || !message) {
+      res.status(400).json({ error: 'Name, email and message are required' });
+      return;
+    }
+
+    const data = fs.readFileSync(messagesFilePath, 'utf-8');
+    const messages = JSON.parse(data);
+
+    const newMessage = {
+      id: crypto.randomUUID(),
+      name,
+      email,
+      subject: subject || 'General Collaboration',
+      message,
+      audioUrl: audioUrl || '',
+      createdAt: new Date().toISOString()
+    };
+
+    messages.push(newMessage);
+    fs.writeFileSync(messagesFilePath, JSON.stringify(messages, null, 2));
+
+    // Log the transmission of message to producer's email: cashmerekid7@gmail.com
+    console.log(`[Email Dispatch] Sending collaboration inquiry to cashmerekid7@gmail.com from ${email} (${name})`);
+
+    res.status(201).json({ success: true, message: newMessage });
+  } catch (error) {
+    console.error('Failed to save contact message:', error);
+    res.status(500).json({ error: 'Internal server error saving message' });
+  }
+});
+
+// Retrieve Contact Messages (Admin only)
+app.get('/api/admin/messages', verifyAdminToken, (req, res) => {
+  try {
+    const data = fs.readFileSync(messagesFilePath, 'utf-8');
+    const messages = JSON.parse(data);
+    res.json(messages);
+  } catch (error) {
+    console.error('Failed to read messages database:', error);
+    res.status(500).json({ error: 'Internal server error reading messages' });
+  }
+});
+
+// Delete Contact Message (Admin only)
+app.delete('/api/admin/messages/:id', verifyAdminToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = fs.readFileSync(messagesFilePath, 'utf-8');
+    const messages = JSON.parse(data);
+
+    const filtered = messages.filter((m: any) => m.id !== id);
+    if (messages.length === filtered.length) {
+      res.status(404).json({ error: 'Message not found' });
+      return;
+    }
+
+    fs.writeFileSync(messagesFilePath, JSON.stringify(filtered, null, 2));
+    res.json({ success: true, deletedId: id });
+  } catch (error) {
+    console.error('Failed to delete message:', error);
+    res.status(500).json({ error: 'Internal server error deleting message' });
   }
 });
 
@@ -500,7 +624,7 @@ export default app;
 
 // Start Server locally
 if (process.env.VERCEL !== '1') {
-  app.listen(PORT, () => {
+  app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`CASHMERE KID$ Storefront running on http://localhost:${PORT}`);
   });
 }

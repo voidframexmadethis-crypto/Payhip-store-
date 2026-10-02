@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PayhipService } from '../services/payhip';
-import { Product } from './ProductCard';
+import { Product, getMusicMetadata } from './ProductCard';
+import LicenseModal from './LicenseModal';
+import { Play, Pause, Share2, ShoppingCart, Music, ArrowLeft, Disc, Calendar, Award, CheckCircle } from 'lucide-react';
 
 interface BeatDetailPageProps {
   product: Product;
@@ -22,17 +24,16 @@ export default function BeatDetailPage({
   onBack
 }: BeatDetailPageProps) {
   const [shareText, setShareText] = useState('SHARE THIS BEAT');
+  const [isLicenseOpen, setIsLicenseOpen] = useState(false);
 
-  const hasVariants = product.variants && product.variants.length > 0;
-  const mainCheckoutUrl = PayhipService.getCheckoutUrl(product.payhipId || '');
+  const metadata = getMusicMetadata(product.title || 'Untitled');
+  const isCurrentTrack = activeTrackId === product.id;
+  const isCurrentlyPlaying = isCurrentTrack && isPlaying;
 
   useEffect(() => {
     PayhipService.refreshOverlay();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [product]);
-
-  const isCurrentTrack = activeTrackId === product.id;
-  const isCurrentlyPlaying = isCurrentTrack && isPlaying;
 
   const handleShare = async () => {
     const beatUrl = `${window.location.origin}/beat/${product.id}`;
@@ -47,7 +48,7 @@ export default function BeatDetailPage({
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(beatUrl);
-        setShareText('COPIED TO CLIPBOARD');
+        setShareText('COPIED LINK!');
         setTimeout(() => setShareText('SHARE THIS BEAT'), 2000);
       }
     } catch (_) {}
@@ -58,207 +59,198 @@ export default function BeatDetailPage({
       {/* Back button */}
       <button 
         onClick={onBack} 
-        className="mb-8 md:mb-12 inline-flex items-center gap-2 text-xs font-bold tracking-widest text-zinc-400 hover:text-white transition-colors duration-200 uppercase cursor-pointer"
+        className="mb-8 md:mb-12 inline-flex items-center gap-2 text-xs font-bold tracking-widest text-zinc-400 hover:text-white transition-colors duration-200 uppercase cursor-pointer border-none bg-transparent"
       >
-        <span>←</span> BACK TO CATALOG
+        <ArrowLeft className="w-4 h-4" /> BACK TO STOREFRONT
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
-        {/* Left Column: Artwork & Player */}
+        
+        {/* Left Column: Artwork Showcase & Quick Player */}
         <div className="lg:col-span-5 space-y-8">
-          <div className="relative aspect-square w-full max-w-md mx-auto lg:max-w-none border border-white/10 p-1 bg-zinc-950">
-            <div className="relative aspect-square w-full overflow-hidden bg-zinc-900">
+          <div className="relative aspect-square w-full max-w-md mx-auto lg:max-w-none border border-white/10 p-1 bg-zinc-950 rounded-lg overflow-hidden group shadow-2xl">
+            <div className="relative aspect-square w-full overflow-hidden bg-zinc-900 rounded">
               {product.artwork ? (
                 <img 
-                  className={`w-full h-full object-cover ${isCurrentlyPlaying ? 'reactive-artwork' : ''}`} 
+                  className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-102 ${isCurrentlyPlaying ? 'reactive-artwork' : ''}`} 
                   src={product.artwork} 
                   alt={`${product.title} Cover Art`} 
+                  referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-zinc-700 font-semibold tracking-wider text-sm">
-                  NO ARTWORK SUPPLIED
+                <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-900 text-zinc-700">
+                  <Music className="w-16 h-16 text-zinc-800 mb-2" />
+                  <span className="text-sm font-bold font-mono tracking-wider">CASHMERE ORIGINAL</span>
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
-              <div className="absolute left-4 top-4 bg-black/60 border border-white/40 px-3 py-1.5 font-bold font-mono text-xs tracking-wider">
-                CK$ ORIGINAL
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none"></div>
               
-              {/* Animated Fire Badge */}
-              <div className="absolute right-4 top-4 z-10">
-                <div className="fire-badge">
-                  <div className="fire-animation">
-                    <div className="fire-flame"></div>
-                    <div className="fire-flame-inner"></div>
-                    <div className="fire-particle"></div>
-                    <div className="fire-particle-2"></div>
-                  </div>
-                  <span>HEAT</span>
+              {/* Hot badge overlay */}
+              {product.featured && (
+                <div className="absolute left-4 top-4 bg-red-600 border border-red-400/30 px-3 py-1.5 font-bold font-mono text-xs tracking-wider uppercase text-white shadow-lg">
+                  POPULAR BEAT
                 </div>
+              )}
+              
+              {/* Play Button Overlay */}
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <button
+                  onClick={() => onPlayToggle(product)}
+                  className="w-20 h-20 rounded-full bg-red-600 text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-2xl border-none cursor-pointer"
+                  disabled={!product.previewAudio}
+                >
+                  {isCurrentlyPlaying ? (
+                    <Pause className="w-8 h-8 fill-white text-white" />
+                  ) : (
+                    <Play className="w-8 h-8 fill-white text-white ml-1" />
+                  )}
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Premium Wide Audio Player Module */}
-          <div className="border border-white/10 bg-zinc-950 p-6 space-y-4">
+          {/* Core Player Info card */}
+          <div className="border border-white/10 bg-zinc-950 p-6 rounded-lg space-y-4">
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => onPlayToggle(product)}
-                className="w-16 h-16 flex items-center justify-center border border-white/80 hover:border-white hover:bg-white hover:text-black transition-all duration-300 rounded-none cursor-pointer"
+                className="w-14 h-14 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:border-white hover:bg-white hover:text-black transition-all duration-300 cursor-pointer"
                 disabled={!product.previewAudio}
               >
-                <span className="text-xl pl-1">{isCurrentlyPlaying ? 'Ⅱ' : '▶'}</span>
+                {isCurrentlyPlaying ? (
+                  <Pause className="w-5 h-5 fill-current" />
+                ) : (
+                  <Play className="w-5 h-5 fill-current ml-0.5" />
+                )}
               </button>
               
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-mono text-zinc-500 uppercase tracking-widest">PREVIEW PLAYER</div>
-                <h4 className="text-lg font-bold tracking-tight text-white truncate">{product.title}</h4>
+                <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest font-bold">PREVIEW DURATION</div>
+                <h4 className="text-base font-bold tracking-tight text-white truncate uppercase">{product.title}</h4>
               </div>
               
               <div className="text-right font-mono text-sm text-zinc-400">
-                {isCurrentTrack ? audioDurationText : '—:—'}
+                {isCurrentTrack ? audioDurationText : '0:00 / 0:00'}
               </div>
             </div>
 
-            {/* Custom interactive track timeline bar */}
+            {/* Simulated Progress waveform */}
             <div className="relative">
-              <div className="waveform h-8 opacity-60" aria-hidden="true"></div>
+              <div className="waveform h-10 opacity-70" aria-hidden="true"></div>
               {isCurrentTrack && (
                 <div 
-                  className="absolute inset-x-0 bottom-0 top-0 bg-white/10 origin-left transition-transform duration-100 ease-linear" 
+                  className="absolute inset-x-0 bottom-0 top-0 bg-red-600/10 origin-left transition-transform duration-100 ease-linear" 
                   style={{ transform: `scaleX(${audioProgress / 100})` }}
                 ></div>
               )}
             </div>
-
-            {!product.previewAudio && (
-              <p className="text-xs text-zinc-500 text-center uppercase font-mono tracking-wider">
-                No audio preview available for this track.
-              </p>
-            )}
           </div>
         </div>
 
-        {/* Right Column: Title, Metadata, Licensing, Checkout */}
-        <div className="lg:col-span-7 space-y-8 md:space-y-12">
+        {/* Right Column: Title, Metadata Grid, Terms, CTA */}
+        <div className="lg:col-span-7 space-y-8 md:space-y-10">
           <div>
-            <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest font-mono">
-              PREMIUM ORIGINAL PRODUCTION
+            <div className="flex items-center gap-2 text-xs font-bold text-red-500 uppercase tracking-widest font-mono">
+              <Award className="w-4 h-4" /> ORIGINAL MUSIC CATALOGUE
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter text-white mt-2 uppercase font-sans">
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white mt-3 uppercase font-sans">
               {product.title}
             </h1>
+            <p className="text-sm font-semibold text-zinc-400 mt-2">
+              Produced by <span className="text-white hover:text-red-500 transition-colors cursor-pointer">CASHMERE KID$</span>
+            </p>
+          </div>
+
+          {/* Beat Metadata Table Row (BPM, Key, Release, Style) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-zinc-950 border border-white/10 rounded-lg font-mono text-xs">
+            <div className="bg-white/[0.02] p-4 border border-white/5 rounded">
+              <span className="text-zinc-500 uppercase font-bold tracking-wider block">TEMPO</span>
+              <span className="text-base font-black text-white mt-1.5 block">{metadata.bpm} BPM</span>
+            </div>
+            <div className="bg-white/[0.02] p-4 border border-white/5 rounded">
+              <span className="text-zinc-500 uppercase font-bold tracking-wider block">KEY</span>
+              <span className="text-base font-black text-red-500 mt-1.5 block">{metadata.key}</span>
+            </div>
+            <div className="bg-white/[0.02] p-4 border border-white/5 rounded">
+              <span className="text-zinc-500 uppercase font-bold tracking-wider block">GENRE</span>
+              <span className="text-base font-black text-white mt-1.5 block">{metadata.genre}</span>
+            </div>
+            <div className="bg-white/[0.02] p-4 border border-white/5 rounded">
+              <span className="text-zinc-500 uppercase font-bold tracking-wider block">FORMAT</span>
+              <span className="text-base font-black text-white mt-1.5 block">WAV/MP3</span>
+            </div>
+          </div>
+
+          {/* Description Section if available */}
+          {product.description && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold tracking-wider text-zinc-500 uppercase font-mono">PRODUCER NOTES</h3>
+              <p className="text-sm text-zinc-300 font-sans leading-relaxed bg-zinc-950/40 p-5 border border-white/10 rounded-lg">
+                {product.description}
+              </p>
+            </div>
+          )}
+
+          {/* Interactive licensing checkout block */}
+          <div className="bg-zinc-950 border border-white/10 p-6 md:p-8 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <span className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-widest block leading-none">STARTING LICENSE PRICE</span>
+              <span className="text-3xl font-black font-mono text-white mt-2 block">
+                ${product.price || '29.99'}
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3.5">
+              <button 
+                onClick={handleShare}
+                className="btn-secondary px-6 py-4 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider cursor-pointer"
+              >
+                <Share2 className="w-4 h-4" /> {shareText}
+              </button>
+
+              <button
+                onClick={() => setIsLicenseOpen(true)}
+                className="btn-primary px-8 py-4 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider cursor-pointer border-none"
+              >
+                <ShoppingCart className="w-4 h-4" /> CHOOSE LICENSE OPTIONS
+              </button>
+            </div>
           </div>
 
           {/* License Terms Box */}
           <div className="space-y-3">
-            <h3 className="text-xs font-bold tracking-wider text-zinc-400 uppercase font-mono">LICENSE TERMS</h3>
-            <div className="bg-zinc-950 p-6 border border-white/10 font-mono text-xs text-zinc-300 leading-relaxed max-h-80 overflow-y-auto space-y-2">
+            <h3 className="text-xs font-bold tracking-wider text-zinc-500 uppercase font-mono">STANDARD LICENSING TERMS</h3>
+            <div className="bg-zinc-950/60 p-6 border border-white/10 rounded-lg font-mono text-xs text-zinc-400 leading-relaxed max-h-64 overflow-y-auto space-y-3">
               {Array.isArray(product.licenseTerms) ? (
                 product.licenseTerms.filter(Boolean).length > 0 ? (
                   product.licenseTerms.filter(Boolean).map((term, index) => (
-                    <div key={index} className="flex items-start gap-2 bg-white/[0.02] p-2.5 border border-white/5">
-                      <span className="text-emerald-500 font-bold">✓</span>
+                    <div key={index} className="flex items-start gap-2.5 bg-black/30 p-2.5 border border-white/5 rounded">
+                      <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                       <span>{term}</span>
                     </div>
                   ))
                 ) : (
-                  <div className="text-zinc-500">Standard licensing terms apply to this premium release.</div>
+                  <div className="text-zinc-600">Standard licensing agreements apply to this track. Contact producer for custom arrangements.</div>
                 )
               ) : (
-                <div className="flex items-start gap-2 bg-white/[0.02] p-2.5 border border-white/5">
-                  <span className="text-emerald-500 font-bold">✓</span>
-                  <span>{product.licenseTerms || 'Standard licensing terms apply to this premium release.'}</span>
+                <div className="flex items-start gap-2.5 bg-black/30 p-2.5 border border-white/5 rounded">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                  <span>{product.licenseTerms || 'Standard licensing agreements apply to this track. Contact producer for custom arrangements.'}</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Product Variants (License List Selection with Inline Buy Buttons) */}
-          {hasVariants ? (
-            <div className="space-y-4">
-              <h3 className="text-xs font-bold tracking-wider text-zinc-400 uppercase font-mono">
-                CHOOSE LICENSE OPTIONS
-              </h3>
-              
-              <div className="space-y-3.5">
-                {product.variants!.map((variant, idx) => {
-                  const isValidVariant = PayhipService.isValidPayhipId(variant.payhipId);
-                  const variantUrl = isValidVariant ? PayhipService.getCheckoutUrl(variant.payhipId) : '';
-                  return (
-                    <div 
-                      key={idx}
-                      className="border border-white/10 p-5 bg-zinc-950/60 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all duration-200 hover:border-white/25"
-                    >
-                      <div className="space-y-1 md:max-w-xl">
-                        <span className="block text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">LICENSE TYPE</span>
-                        <h4 className="text-base font-bold text-white uppercase tracking-tight">{variant.name}</h4>
-                        {variant.description && (
-                          <p className="text-xs text-zinc-400 font-mono leading-relaxed mt-1.5 whitespace-pre-wrap bg-black/35 p-3 border border-white/5">{variant.description}</p>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center gap-4 flex-shrink-0 justify-between md:justify-end">
-                        <span className="text-xl font-black font-mono text-white">${variant.price}</span>
-                        {isValidVariant ? (
-                          <a 
-                            className="px-6 py-3.5 bg-white text-black hover:bg-zinc-200 text-xs font-extrabold tracking-widest uppercase transition-all font-mono inline-flex items-center gap-1.5 rounded-none payhip-buy-button cursor-pointer"
-                            href={variantUrl}
-                            data-product={variant.payhipId.trim()}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            BUY LICENSE ↗
-                          </a>
-                        ) : (
-                          <span className="px-5 py-3 bg-zinc-900 border border-white/10 text-zinc-500 text-xs font-bold uppercase tracking-wider font-mono">
-                            BUY LICENSE (PENDING)
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            /* Primary Purchase Module for Single Option products */
-            <div className="border border-white/10 p-6 bg-zinc-950 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div>
-                <div className="text-xs font-bold font-mono text-zinc-500 uppercase tracking-wider">SECURE PAYHIP CHECKOUT</div>
-                <h4 className="text-lg font-bold text-white mt-1 uppercase">
-                  {product.title} — ${product.price || '0.00'}
-                </h4>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button 
-                  onClick={handleShare}
-                  className="px-6 py-4 border border-white/30 hover:border-white text-xs font-bold tracking-widest uppercase transition-colors rounded-none cursor-pointer text-white"
-                >
-                  {shareText}
-                </button>
-
-                {PayhipService.isValidPayhipId(product.payhipId) ? (
-                  <a 
-                    className="px-8 py-4 bg-white text-black hover:bg-zinc-200 text-xs font-extrabold tracking-widest uppercase transition-colors inline-flex items-center justify-center gap-2 rounded-none payhip-buy-button" 
-                    href={PayhipService.getCheckoutUrl(product.payhipId || '')}
-                    data-product={(product.payhipId || '').trim()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    PROCEED TO PAYHIP ↗
-                  </a>
-                ) : (
-                  <span className="px-8 py-4 bg-zinc-900 border border-white/10 text-zinc-500 text-xs font-bold uppercase tracking-widest font-mono cursor-not-allowed">
-                    CHECKOUT PENDING
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Embedded Licensing modal state */}
+      {isLicenseOpen && (
+        <LicenseModal 
+          product={product} 
+          onClose={() => setIsLicenseOpen(false)} 
+        />
+      )}
     </div>
   );
 }
