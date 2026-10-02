@@ -13,9 +13,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ onBackToStore, onRefreshCatalog }: AdminPanelProps) {
-  const [authToken, setAuthToken] = useState<string | null>(() => {
-    return localStorage.getItem('cashmere_admin_token');
-  });
+  const [authToken, setAuthToken] = useState<string | null>('bypass_admin_token');
   
   // Dashboard & form states
   const [products, setProducts] = useState<Product[]>([]);
@@ -100,77 +98,16 @@ export default function AdminPanel({ onBackToStore, onRefreshCatalog }: AdminPan
   };
 
   const verifyExistingSession = async () => {
-    const savedToken = localStorage.getItem('cashmere_admin_token');
-    if (!savedToken) {
-      setAuthToken(null);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/admin/passkey/verify-session', {
-        headers: { 'Authorization': `Bearer ${savedToken}` }
-      });
-      const data = await res.json();
-      if (res.ok && data.valid) {
-        setAuthToken(savedToken);
-      } else {
-        localStorage.removeItem('cashmere_admin_token');
-        setAuthToken(null);
-      }
-    } catch (e) {
-      localStorage.removeItem('cashmere_admin_token');
-      setAuthToken(null);
-    } finally {
-      setLoading(false);
-    }
+    setAuthToken('bypass_admin_token');
+    setLoading(false);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password.trim()) {
-      setAuthError('Please enter the password.');
-      return;
-    }
-
-    setAuthError('');
-    setAuthSuccess('');
-    setAuthenticating(true);
-
-    try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
-      });
-      const data = await res.json();
-      if (res.ok && data.token) {
-        localStorage.setItem('cashmere_admin_token', data.token);
-        setAuthToken(data.token);
-        setAuthSuccess('✓ Access Granted. Unlocking Creator Panel...');
-        setPassword('');
-      } else {
-        setAuthError(data.error || 'Incorrect admin password.');
-      }
-    } catch (err) {
-      setAuthError('Connection error verifying password.');
-    } finally {
-      setAuthenticating(false);
-    }
   };
 
   const handleLogout = async () => {
-    if (authToken) {
-      try {
-        await fetch('/api/admin/passkey/logout', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-      } catch (e) {}
-    }
-    setAuthToken(null);
-    localStorage.removeItem('cashmere_admin_token');
-    setProducts([]);
+    onBackToStore();
   };
 
   const fetchProducts = async () => {
@@ -481,13 +418,6 @@ export default function AdminPanel({ onBackToStore, onRefreshCatalog }: AdminPan
             className="btn-primary px-6 py-3.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer border-none"
           >
             <Plus className="w-4 h-4" /> ADD NEW TRACK
-          </button>
-          <button
-            onClick={handleLogout}
-            className="btn-secondary px-4 py-3.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
-            title="Lock Dashboard Session"
-          >
-            <LogOut className="w-4 h-4 text-red-500" /> LOCK
           </button>
           <button
             onClick={onBackToStore}

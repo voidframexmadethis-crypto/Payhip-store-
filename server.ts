@@ -111,23 +111,6 @@ const cleanOldChallenges = () => {
 
 // Direct Admin Access Middleware
 const verifyAdminToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader ? authHeader.split(' ')[1] : null;
-
-  if (!token) {
-    res.status(401).json({ error: 'Unauthorized access. Token is missing.' });
-    return;
-  }
-
-  const sessions = getSessions();
-  const now = new Date().toISOString();
-  const isValid = sessions.some((s: any) => s.token === token && s.expiresAt > now);
-
-  if (!isValid) {
-    res.status(401).json({ error: 'Unauthorized access. Token is invalid or expired.' });
-    return;
-  }
-
   next();
 };
 
